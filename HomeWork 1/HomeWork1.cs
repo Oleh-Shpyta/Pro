@@ -1,59 +1,104 @@
-﻿using System;
-class Program 
+﻿//Звдання 1: IOutput, Завдання 2: IMath, Завдання 3 ISort!
+
+using System;
+using System.Reflection.Metadata;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+class Program
 {
-    static void Main(string[] args) 
+    static void Main()
     {
-        float one, two, result;
-        char sign;
+        MyArray num = new MyArray(new int[] { 5, 4, 6 });
+        num.Show();
+        num.Show("Масив чисел");
 
-        Console.WriteLine("Добро пожалувати в Калькулятор");
-        Console.WriteLine("Введіть перше число: ");
-        one = Convert.ToSingle(Console.ReadLine());
-        Console.WriteLine("Ввдіть знак (+, -, *, /): ");
-        string input = Console.ReadLine();
-        if (input.Length == 1)
+        Console.WriteLine($"Максимум: {num.Max()}");
+        Console.WriteLine($"Мінімум: {num.Min()}");
+        Console.WriteLine($"Середнє значення: {num.Avg()}");
+        Console.WriteLine($"Число 2 знайдено? {num.Search(2)}");
+
+        num.SortAsc();
+        num.Show("Сортування масиву за Зростанням: ");
+
+        num.SortDesc();
+        num.Show("Сортування масиву за Спаданням: ");
+
+        num.SortByParam(true);
+        num.Show("параметр true - Зростання ");
+        num.SortByParam(false);
+        num.Show("параметр false - Спаданням ");
+
+    }
+    interface IOutput
+    {
+        void Show();
+        void Show(string info);
+    }
+    interface IMath
+    {
+        int Max();
+        int Min();
+        float Avg();
+        bool Search(int valueToSearch);
+    }
+    interface ISort 
+    {
+        void SortAsc();
+        void SortDesc();
+        void SortByParam(bool isAsc);
+    }
+    class MyArray : IOutput, IMath, ISort
+    {
+        private int[] array;
+        public MyArray(int[] num)
         {
-            sign = input[0];
+            array = num;
         }
-        else 
+        public void Show()
         {
-            Console.WriteLine("Не коректно введений знак! ");
-            return;
+            Console.WriteLine(string.Join("", array));
         }
-            Console.WriteLine("Введіть друге число: ");
-        two = Convert.ToSingle(Console.ReadLine());
-
-        switch (sign) 
+        public void Show(string info)
         {
-            case '+': result = one+ two ;
-                Console.WriteLine($"Сума ваших чисел дорівнює: {result} ");
-            break;
-
-            case '-':
-                result = one - two;
-                Console.WriteLine($"Різниця ваших чисел дорівнює: {result} ");
-            break;
-
-            case '*':
-                result = one * two ;
-                Console.WriteLine($"Множення ваших чисел дорівнює: {result} ");
-            break;
-
-            case '/':
-                if (two == 0)
-                    Console.WriteLine("Ділити на 0 неможливо! ");
-
-                else
-                {
-                    result = one / two;
-                    Console.WriteLine($"Ділення ваших чисел дорівнює: {result} ");
-                }
-            break;
-        default: Console.WriteLine("Ви ввели недопустимий символ! ");
-                Console.WriteLine("Для виходу настисніть будь-яку клавішу ");
-                break;
-
+            Console.WriteLine(info);
+            Show();
         }
-
+        public int Max()
+        {
+            if (array.Length == 0)
+                throw new InvalidOperationException("Масив пустий");
+            return array.Max();
+        }
+        public int Min()
+        {
+            if (array.Length == 0)
+                throw new InvalidOperationException("Масив пустий");
+            return array.Min();
+        }
+        public float Avg()
+        {
+            if (array.Length == 0)
+                throw new InvalidOperationException("Масив пустий");
+            return (float)array.Average();
+        }
+        public bool Search(int valueToSearch)
+        {
+            return array.Contains(valueToSearch);
+        }
+        public void SortAsc() 
+        {
+            Array.Sort(array);
+        }
+        public void SortDesc() 
+        {
+            Array.Sort(array);
+            Array.Reverse(array);
+        }
+        public void SortByParam(bool isAsc) 
+        {
+            if (isAsc)
+                SortAsc();
+            else
+                SortAsc();
+        }
     }
 }
