@@ -1,59 +1,72 @@
 ﻿using System;
-class Program 
+using System.Text;
+class Progtam 
 {
-    static void Main(string[] args) 
+    static void Main() 
     {
-        float one, two, result;
-        char sign;
+        Console.OutputEncoding = Encoding.UTF8;
 
-        Console.WriteLine("Добро пожалувати в Калькулятор");
-        Console.WriteLine("Введіть перше число: ");
-        one = Convert.ToSingle(Console.ReadLine());
-        Console.WriteLine("Ввдіть знак (+, -, *, /): ");
-        string input = Console.ReadLine();
-        if (input.Length == 1)
+        var shop = new BarberShop(3);
+        var barberThread = new Thread(shop.Barber);
+        barberThread.Start();
+
+        for (int i = 1; i <= 20; i++)
         {
-            sign = input[0];
+            int customerId = i;
+            new Thread(() => shop.Customer(customerId)).Start();
+            Thread.Sleep(new Random().Next(600, 1200));
         }
-        else 
+    }
+}
+class BarberShop
+{
+    private readonly int waitingRoomSize;
+    private readonly Queue<int> waitingRoom;
+    private readonly Semaphore customers;
+    private readonly Semaphore barber;
+    private readonly object syncLock = new();
+    private bool isBarberSleeping = true;
+    public BarberShop(int waitingRoomSize)
+    {
+        this.waitingRoomSize = waitingRoomSize;
+        waitingRoom = new Queue<int>();
+        customers = new Semaphore(0, waitingRoomSize);
+        barber = new Semaphore(0, 1);
+    }
+    public void Barber()
+    {
+        while (true)
         {
-            Console.WriteLine("Не коректно введений знак! ");
-            return;
+            Console.WriteLine("Перукар спить...");
+            customers.WaitOne();
+            lock (syncLock)
+            {
+                isBarberSleeping = false;
+            }
+            int customer;
+            lock (syncLock)
+            {
+                customer = waitingRoom.Dequeue();
+            }
+            Console.WriteLine($"Перукар стриже клієнта {customer}...");
+            Thread.Sleep(1000);
+            Console.WriteLine($"Клієнт {customer} пострижений.");
+            barber.Release();
         }
-            Console.WriteLine("Введіть друге число: ");
-        two = Convert.ToSingle(Console.ReadLine());
-
-        switch (sign) 
+    }
+    public void Customer(int id)
+    {
+        lock (syncLock)
         {
-            case '+': result = one+ two ;
-                Console.WriteLine($"Сума ваших чисел дорівнює: {result} ");
-            break;
-
-            case '-':
-                result = one - two;
-                Console.WriteLine($"Різниця ваших чисел дорівнює: {result} ");
-            break;
-
-            case '*':
-                result = one * two ;
-                Console.WriteLine($"Множення ваших чисел дорівнює: {result} ");
-            break;
-
-            case '/':
-                if (two == 0)
-                    Console.WriteLine("Ділити на 0 неможливо! ");
-
-                else
-                {
-                    result = one / two;
-                    Console.WriteLine($"Ділення ваших чисел дорівнює: {result} ");
-                }
-            break;
-        default: Console.WriteLine("Ви ввели недопустимий символ! ");
-                Console.WriteLine("Для виходу настисніть будь-яку клавішу ");
-                break;
-
+            if (waitingRoom.Count >= waitingRoomSize)
+            {
+                Console.WriteLine($"Клієнт {id} пішов – немає вільних місць у приймальні.");
+                return;
+            }
+            waitingRoom.Enqueue(id);
+            Console.WriteLine($"Клієнт {id} чекає у приймальні.");
         }
-
+        customers.Release();
+        barber.WaitOne();
     }
 }
